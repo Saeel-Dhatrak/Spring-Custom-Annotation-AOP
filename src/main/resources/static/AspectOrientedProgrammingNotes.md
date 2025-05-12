@@ -117,5 +117,109 @@
         }
     }
   ```
-- @Around annotation is our advice and around advice means we are adding extra code both before and after our method execution. Here spring brings something called as Point cut.
-- Point cut is 
+- @Around annotation is our advice and around advice means we are adding extra code both before and after our method execution. Here spring brings something called as Advices and Point cut.
+- Point cut is an expression that selects one or more join points. Join Points are places in your program where a behaviour can be attached. Example before the execution of a method or after the execution of a method and so on. Example of Join Point : ethpds, field access operations or some exceptions.
+- Advice : Advice represent any action taken by an aspect (cross-cutting concern) at a particular join point. Advice helps us to identify when the logic should be executed. Like BEFORE the join point execution, AFTER the joint point execution, AFTER retruning from a method, AFTER throwing from a method, AFTER the finally block, AROUND, around is actually going to surround our join point from beginning to end.
+- So we have used the Advice as Around in our annotation above which means that this logtime function is going to handle both before and after execution aspect of our method where we will attach the annotation.
+- Let's build the logic of our method to calculate the amount of time taken by any particular method that is annotated with our annotation
+- ```java
+  package com.example.aop;
+
+  import org.aspectj.lang.annotation.Around;
+  import org.aspectj.lang.annotation.Aspect;
+  import org.springframework.stereotype.Component;
+
+  @Aspect
+  @Component
+  public class TimeMonitorAspect {
+
+      @Around("@annotation(TimeMonitor)")
+      public void logtime(){
+          
+          long start = System.currentTimeMillis(); // start time of the code
+          
+          // execute the join point
+          // Logic will be written over here
+          
+
+          long end = System.currentTimeMillis(); // end time of the code
+          
+          long totalExecutionTime = end - start;
+
+          System.out.println("Total time of execution of the method is:" + totalExecutionTime + " ms...");
+      }
+  }
+  ```
+- As this method is annotated with @Around advice, this method can expect an object and this object is of type `ProceedingJointPoint`. This ProceedingJointPoint joint point is a special type of joint point that we can use in the  around advice which can help us to control when to start the execution of the particular method. Inside the ProceedingJointPoint, there is a `proceed` method is actually going to start the execution of our code and it throws and exception and we have to handle that exception using try-catch blocks
+- ```java
+  package com.example.aop;
+
+  import org.aspectj.lang.ProceedingJoinPoint;
+  import org.aspectj.lang.annotation.Around;
+  import org.aspectj.lang.annotation.Aspect;
+  import org.springframework.stereotype.Component;
+
+  @Aspect
+  @Component
+  public class TimeMonitorAspect {
+
+      @Around("@annotation(TimeMonitor)")
+      public void logtime(ProceedingJoinPoint joinPoint){
+
+          long start = System.currentTimeMillis(); // start time of the code 
+          try{
+              // to execute the join point
+              joinPoint.proceed();
+          } 
+          catch (Throwable e) {
+              System.out.println("Something went wrong during the execution");
+          }
+          finally{
+              long end = System.currentTimeMillis(); // end time of the code
+
+              long totalExecutionTime = end - start;
+
+              System.out.println("Total time of execution of the method is:" + totalExecutionTime + " ms...");   
+          }
+      }
+  }
+  ```
+- To check this let's create some fake code controller and service.
+- ```java
+  package com.example.aop;
+
+  import org.springframework.stereotype.Service;
+
+  @Service public class AopService {
+
+      @TimeMonitor
+      public String doRandomThings(){
+          for(long i=0; i< 100000000L; i++){
+
+          }
+          return "Something";
+      }
+  }
+
+
+  ////////////////////////////////////////////////////////
+
+  package com.example.aop;
+
+  import org.springframework.beans.factory.annotation.Autowired;
+  import org.springframework.web.bind.annotation.GetMapping;
+  import org.springframework.web.bind.annotation.RestController;
+
+  @RestController
+  public class AopController {
+
+      @Autowired
+      private AopService aopService;
+
+      @GetMapping("/get")
+      public String doRandomThings(){
+          return aopService.doRandomThings();
+      }
+  }
+  ```
+- And now upon running and hitting the API we will get te result in the console as : `Total time of execution of the method is:65 ms...`
