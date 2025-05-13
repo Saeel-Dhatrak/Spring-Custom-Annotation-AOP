@@ -13,7 +13,8 @@ public class AopController {
 
     @GetMapping("/get")
     public String doRandomThings(){
-        return aopService.doRandomThings();
+         aopService.doRandomThings();
+         return "Hello From AOP";
     }
 
 }

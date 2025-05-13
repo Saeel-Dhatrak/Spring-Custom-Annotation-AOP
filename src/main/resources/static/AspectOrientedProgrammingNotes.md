@@ -213,13 +213,15 @@
   @RestController
   public class AopController {
 
-      @Autowired
-      private AopService aopService;
+        @Autowired
+        private AopService aopService;
 
-      @GetMapping("/get")
-      public String doRandomThings(){
-          return aopService.doRandomThings();
-      }
+        @GetMapping("/get")
+        public String doRandomThings(){
+            aopService.doRandomThings();
+            return "Hello From AOP";
+        }
   }
   ```
-- And now upon running and hitting the API we will get te result in the console as : `Total time of execution of the method is:65 ms...`
+- And now upon running and hitting the API we will get te result in the console as : `Total time of execution of the method is:65 ms...` and we will also get the output on the browser as Hello from AOP.
+- In place of println we can make use of slf4j to see the logging mechanism in a more detailed way.
